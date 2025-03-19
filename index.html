@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f4f4f4;
+        }
+        .login-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Login</h2>
+        <input type="password" id="passcode" placeholder="Enter Passcode" />
+        <button onclick="checkPasscode()">Login</button>
+        <p>or</p>
+        <button onclick="authenticate()">Login with Fingerprint</button>
+    </div>
+
+  <script>
+    async function authenticate() {
+        if (!window.PublicKeyCredential || !navigator.credentials) {
+            alert("WebAuthn not supported on this device");
+            return;
+        }
+
+        try {
+            const publicKeyOptions = {
+                challenge: new Uint8Array(32),
+                allowCredentials: [],
+                userVerification: "required",
+                authenticatorSelection: {
+                    authenticatorAttachment: "platform" // Prefer built-in fingerprint
+                }
+            };
+
+            const credential = await navigator.credentials.get({ publicKey: publicKeyOptions });
+
+            if (credential) {
+                alert("Fingerprint authentication successful!");
+            } else {
+                alert("Fingerprint authentication failed.");
+            }
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
+    }
+</script>
+
+</body>
+</html>
