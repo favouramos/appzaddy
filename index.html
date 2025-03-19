@@ -19,11 +19,12 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             text-align: center;
+            width: 300px;
         }
         input {
             width: 100%;
             padding: 10px;
-            margin: 10px 0;
+            margin: 10px 5px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
@@ -35,6 +36,7 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            margin-top: 10px;
         }
         button:hover {
             background: #0056b3;
@@ -44,41 +46,99 @@
 <body>
     <div class="login-container">
         <h2>Login</h2>
+        <input type="email" id="email" placeholder="Enter Email" />
         <input type="password" id="passcode" placeholder="Enter Passcode" />
         <button onclick="checkPasscode()">Login</button>
         <p>or</p>
+        <button onclick="registerPasskey()">Register Fingerprint</button>
         <button onclick="authenticate()">Login with Fingerprint</button>
     </div>
 
-  <script>
-    async function authenticate() {
-        if (!window.PublicKeyCredential || !navigator.credentials) {
-            alert("WebAuthn not supported on this device");
-            return;
-        }
+    <script>
+        // Sample stored credentials (Replace this with a real database)
+        const users = {
+            "favouramos2024@gmail.com": "5678" // Email: Passcode
+        };
 
-        try {
-            const publicKeyOptions = {
-                challenge: new Uint8Array(32),
-                allowCredentials: [],
-                userVerification: "required",
-                authenticatorSelection: {
-                    authenticatorAttachment: "platform" // Prefer built-in fingerprint
-                }
-            };
+        // Validate Passcode
+        function checkPasscode() {
+            const email = document.getElementById('email').value;
+            const passcode = document.getElementById('passcode').value;
 
-            const credential = await navigator.credentials.get({ publicKey: publicKeyOptions });
-
-            if (credential) {
-                alert("Fingerprint authentication successful!");
+            if (users[email] && users[email] === passcode) {
+                alert("Login Successful!");
             } else {
-                alert("Fingerprint authentication failed.");
+                alert("Incorrect Email or Passcode!");
             }
-        } catch (error) {
-            alert("Error: " + error.message);
         }
-    }
-</script>
+
+        // Register Fingerprint (WebAuthn)
+        async function registerPasskey() {
+            if (!window.PublicKeyCredential || !navigator.credentials) {
+                alert("WebAuthn not supported on this device");
+                return;
+            }
+
+            try {
+                const publicKeyOptions = {
+                    challenge: new Uint8Array(32),
+                    rp: { name: "My Website" },
+                    user: {
+                        id: new Uint8Array(16),
+                        name: "favouramos2024@gmail.com", // FIXED: Matches login email
+                        displayName: "Favour"
+                    },
+                    pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+                    authenticatorSelection: {
+                        authenticatorAttachment: "platform",
+                        userVerification: "required"
+                    },
+                    timeout: 60000,
+                    attestation: "direct"
+                };
+
+                const credential = await navigator.credentials.create({ publicKey: publicKeyOptions });
+
+                if (credential) {
+                    alert("Fingerprint registered successfully!");
+                } else {
+                    alert("Fingerprint registration failed.");
+                }
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        }
+
+        // Login with Fingerprint
+        async function authenticate() {
+            if (!window.PublicKeyCredential || !navigator.credentials) {
+                alert("WebAuthn not supported on this device");
+                return;
+            }
+
+            try {
+                const publicKeyOptions = {
+                    challenge: new Uint8Array(32),
+                    allowCredentials: [{
+                        type: "public-key",
+                        id: new Uint8Array(16),
+                        transports: ["internal"]
+                    }],
+                    userVerification: "required"
+                };
+
+                const credential = await navigator.credentials.get({ publicKey: publicKeyOptions });
+
+                if (credential) {
+                    alert("Fingerprint authentication successful!");
+                } else {
+                    alert("Fingerprint authentication failed.");
+                }
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        }
+    </script>
 
 </body>
 </html>
